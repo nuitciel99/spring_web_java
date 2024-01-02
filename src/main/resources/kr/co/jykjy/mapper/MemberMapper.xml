@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org/DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.jykjy.mapper.MemberMapper">
+		<!-- select * from tbl_member where id = #{id} -->
+	<resultMap type="kr.co.jykjy.domain.MemberVO" id="memberMap">
+		<id column="id" property="id"/>
+		<result column="pw" property="pw"/>
+		<result column="username" property="username"/>
+		<result column="regdate" property="regdate"/>
+		<result column="updatedate" property="updatedate"/>
+		<result column="enabled" property="enabled"/>
+		<collection property="auths" resultMap="authMap" />
+	</resultMap>
+	
+	<resultMap type="kr.co.jykjy.domain.AuthVO" id="authMap">
+		<result column="id" property="id" />
+		<result column="auth" property="auth"/>
+
+	</resultMap>
+	
+	
+	<select id="read" resultMap="memberMap">
+		select * 
+		from tbl_member
+		left join tbl_auth
+		using(id)
+		where id = #{id}
+	</select>
+	
+	
+	
+</mapper>

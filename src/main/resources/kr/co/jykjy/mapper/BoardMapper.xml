@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org/DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.jykjy.mapper.BoardMapper">
+	
+	<sql id="dynamicSearch">
+		<trim prefix="where (" suffix=")" prefixOverrides="or">
+			<foreach collection="typeArr" item="t">
+				<trim prefix="or">
+					<choose>
+						<when test="t == 'T'.toString()">
+							title like concat('%',#{keyword},'%')
+						</when>
+						<when test="t == 'C'.toString()">
+							content like concat('%',#{keyword},'%')
+						</when>
+						<when test="t == 'W'.toString()">
+							writer like concat('%',#{keyword},'%')
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+
+	<select id="getList" resultType="board">
+		<![CDATA[
+		select * from tbl_board where bno > 0
+		]]>
+	</select>
+	<select id="getListWithPaging" resultType="board" parameterType="kr.co.jykjy.domain.Criteria">
+		select * from tbl_board
+		<include refid="dynamicSearch" />
+		order by bno desc limit #{amount} offset #{offset}
+	</select>
+	
+	<select id="getTotal" resultType="int" >
+		select count(*) from tbl_board
+		<include refid="dynamicSearch" />
+	</select>
+	
+	<insert id="insert">
+		insert into tbl_board (bno, title, content, writer)
+		values (nextval(seq_board), #{title}, #{content}, #{writer})
+	</insert>
+	
+	<insert id="insertSelectKey">
+		<selectKey keyProperty="bno" order="BEFORE" resultType="long">
+			select nextval(seq_board) from dual
+		</selectKey>
+		insert into tbl_board (bno, title, content, writer) values (#{bno}, #{title}, #{content}, #{writer})
+	</insert>
+	
+	<select id="read" resultType="board">
+	<!-- 
+		#{value} : escape 후 wrapping
+		${value} : pure value
+		
+		java type String str = "가나다라"
+		
+		select * from tbl_board where title = #{title}
+		select * from tbl_board where title = '가나다라'
+		
+		
+		select * from tbl_board where title = ${title}
+		select * from tbl_board where title = 가나다라
+		
+		select * 
+		from tbl_board 
+		where (title like '% || #{keyword} || %')
+		order by bno 
+		desc limit 10 offset 0;
+		select * 
+		from tbl_board 
+		where (title like '%'수정'%')
+		order by bno 
+		desc limit 10 offset 0;
+		
+		select * 
+		from tbl_board 
+		where (title like '%${keyword}%')
+		order by bno 
+		desc limit 10 offset 0;
+		select * 
+		from tbl_board 
+		where (title like '%수정%')
+		order by bno 
+		desc limit 10 offset 0;
+		'%value%'
+	 -->
+		select * from tbl_board where bno = #{bno}
+		<!-- <if test="bno != null">
+			<where>
+			where bno = #{bno}
+			</where>
+		</if>
+		<if test="title != null">
+			<where>
+			title = #{title}
+			</where>
+		</if> -->
+	</select>
+	
+	<delete id="delete">
+		delete from tbl_board where bno = #{bno}
+	</delete>
+	
+	<update id="update">
+		update tbl_board set title = #{title}, content = #{content}, writer=#{writer}, updateDate = now() where bno = #{bno}
+	</update>
+	
+	<select id="testSearch" resultType="board">
+		select * from tbl_board
+		<trim prefix="where (" suffix=")" prefixOverrides="or">
+			<foreach collection="map" item="val" index="key">
+				<trim prefix="or">
+					<if test="key == 'C'.toString()">
+					content = #{val}
+					</if>
+					<if test="key == 'T'.toString()">
+					title = #{val}
+					</if>
+					<if test="key == 'W'.toString()">
+					writer = #{val}
+					</if>
+				</trim>
+			</foreach>
+		</trim>
+		limit 10 
+	</select>
+	
+	<update id="updateReplyCnt">
+		update tbl_board set replycnt = replycnt + #{amount} where bno = #{bno}
+	</update>
+
+</mapper>
